@@ -1,0 +1,9 @@
+cell_type,cluster,n_overlap,overlap_genes,de_only,shap_only
+CD4 T,0,0,[],"['CD3D', 'LDHB', 'RPL31', 'RPS12', 'RPS14', 'RPS25', 'RPS27', 'RPS3', 'RPS6', 'TPT1']","['CCL5', 'CD74', 'CST3', 'CST7', 'FTL', 'HLA-DRA', 'HLA-DRB1', 'LYZ', 'NKG7', 'TYROBP']"
+B cell,2,6,"['CD74', 'CD79A', 'CD79B', 'HLA-DPB1', 'HLA-DRA', 'HLA-DRB1']","['CD37', 'HLA-DQA1', 'HLA-DQB1', 'MS4A1']","['CST3', 'HLA-DPA1', 'LYZ', 'TYROBP']"
+FCGR3A Mono,4,5,"['COTL1', 'FCER1G', 'FTH1', 'FTL', 'LST1']","['AIF1', 'IFITM3', 'PSAP', 'S100A11', 'SAT1']","['CST3', 'LYZ', 'S100A8', 'S100A9', 'TYROBP']"
+NK,5,6,"['CST7', 'GNLY', 'GZMA', 'GZMB', 'NKG7', 'PRF1']","['B2M', 'CTSW', 'FGFBP2', 'HLA-C']","['CD3D', 'FCER1G', 'HLA-DRA', 'TYROBP']"
+CD8 T,3,7,"['CCL5', 'CD3D', 'CST7', 'CTSW', 'GZMA', 'HLA-C', 'NKG7']","['B2M', 'HLA-A', 'IL32']","['FTL', 'HLA-DRA', 'TYROBP']"
+CD14 Mono,1,8,"['CST3', 'FCN1', 'FTL', 'LGALS2', 'LYZ', 'S100A8', 'S100A9', 'TYROBP']","['LGALS1', 'S100A6']","['FTH1', 'HLA-DRA']"
+DC,6,5,"['CD74', 'CST3', 'HLA-DPA1', 'HLA-DQA1', 'HLA-DRA']","['HLA-DMA', 'HLA-DPB1', 'HLA-DQB1', 'HLA-DRB1', 'HLA-DRB5']","['CD79A', 'FTL', 'LYZ', 'S100A8', 'TYROBP']"
+Megakaryocyte,7,1,['GPX1'],"['CALM3', 'GNG11', 'NRGN', 'PF4', 'PPBP', 'RGS18', 'SDPR', 'SPARC', 'TPM4']","['CCL5', 'CD74', 'CST3', 'FTH1', 'FTL', 'LYZ', 'NKG7', 'RPS27', 'S100A9']"
