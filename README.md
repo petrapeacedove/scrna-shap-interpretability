@@ -1,2 +1,111 @@
-# scrna-shap-interpretability
-Single-cell RNA-seq analysis of PBMC data (scanpy: QC, clustering, cell type annotation) with a SHAP interpretability layer compared against differential expression. 96% classification accuracy; SHAP reveals combinatorial marker signal that standard DE testing misses for CD4+ T cells.
+# Interpretable Cell Type Discovery in scRNA-seq: SHAP vs. Differential Expression
+
+## Overview
+
+Standard single-cell RNA-seq analysis identifies cell types via clustering (Leiden) followed by
+differential expression testing to find marker genes. This project asks a methodological question:
+**does a model-based interpretability method (SHAP applied to a classifier) agree with the standard
+statistical approach on which genes define each cell type — and where the two methods diverge,
+what does that reveal?**
+
+## Dataset
+
+[PBMC 3k](https://www.10xgenomics.com/resources/datasets) — 2,700 peripheral blood mononuclear
+cells from a healthy donor, sequenced with 10x Genomics. Loaded via `scanpy.datasets.pbmc3k()`.
+Chosen as a clean, well-characterized dataset so the analysis could focus on methodology rather
+than data quality issues.
+
+## Methodology
+
+1. **QC & preprocessing** — filtered low-quality cells (`n_genes_by_counts < 2500`,
+   `pct_counts_mt < 5%`, thresholds chosen from visual inspection of QC distributions), normalized,
+   log-transformed, and selected highly variable genes. Retained 2,638 of 2,700 cells.
+2. **Clustering & annotation** — PCA (15 PCs, chosen from the variance-ratio elbow) → UMAP →
+   Leiden clustering (resolution 0.5) produced 8 clusters. Each was annotated against canonical
+   PBMC marker genes and cross-validated with a dotplot, yielding: CD4 T, CD14 Monocytes, B cells,
+   CD8 T, FCGR3A Monocytes, NK cells, Dendritic cells, and Megakaryocytes.
+3. **Interpretability comparison** — trained a Random Forest to distinguish the 8 annotated cell
+   types using 65 unique marker genes (the union of each cluster's top differential-expression
+   genes). Applied SHAP (`TreeExplainer`) to identify which genes the model relies on for each
+   class, then compared SHAP's top-10 genes per cell type against the top-10 differential
+   expression genes for the corresponding cluster.
+
+   **Framing note:** because cell type labels were derived from Leiden clustering on this same
+   expression data, this is not an out-of-sample prediction task — it validates and explains
+   cluster separability through a second, independent lens (model-based feature attribution vs.
+   univariate statistical testing), rather than claiming novel biological discovery.
+
+## Results
+
+**Classifier performance:** 96% overall accuracy (660 test cells), with near-perfect precision/recall
+on well-separated types (B cell: 1.00/1.00, CD4 T: 0.97/0.99) and expected minor confusion between
+closely related subtypes (CD8 T vs. CD4 T; FCGR3A vs. CD14 Monocytes).
+
+**SHAP vs. differential expression overlap** (shared genes in each method's top 10, per cell type):
+
+| Cell type | Overlap | Notes |
+|---|---|---|
+| CD14 Monocytes | 8/10 | Strong agreement — distinct marker program (S100A8/9, LYZ, FCN1) |
+| CD8 T | 7/10 | Strong agreement — cytotoxic markers (GZMA, NKG7, CCL5) |
+| NK | 6/10 | Strong agreement — GNLY, GZMB, PRF1 |
+| B cell | 6/10 | Strong agreement — CD79A/B, HLA-DR genes |
+| FCGR3A Monocytes | 5/10 | Moderate agreement |
+| Dendritic cells | 5/10 | Moderate agreement |
+| Megakaryocyte | 1/10 | Low agreement — likely a small-sample artifact (13 cells total) |
+| **CD4 T** | **0/10** | **No overlap — see discussion below** |
+
+**Mean overlap across all cell types: 4.8/10.**
+
+## Discussion
+
+Agreement between SHAP and differential expression was strongest for cell types with distinct,
+well-established marker programs, where both a univariate statistical test and a multivariate
+classifier converge easily on the same signal.
+
+The most notable result is **CD4 T cells (0/10 overlap)**. Differential expression's top genes for
+this cluster were almost entirely ribosomal/housekeeping genes (RPS12, RPS14, RPS27, LDHB) — likely
+because CD4 T cells are the largest, "default" population in PBMC 3k, so a one-vs-rest statistical
+test surfaces subtle average differences rather than a distinctive marker program. SHAP instead
+surfaced genes associated with *other* cell types (CD74, HLA-DRA, TYROBP — monocyte/antigen-presentation
+markers; NKG7 — a cytotoxic/NK marker), suggesting the classifier identifies CD4 T cells largely by
+the *absence* of other populations' signatures rather than a positive CD4 T-specific program. This
+is a distinction a univariate differential expression test cannot capture by construction, since it
+compares one cluster against the rest gene-by-gene, without modeling how the joint absence of other
+genes contributes to classification.
+
+**Limitation:** both methods are applied to clusters derived from this same expression data, so this
+analysis compares two *interpretability methods* on a shared, well-defined problem — it does not
+claim novel PBMC biology, which is already extensively characterized in the literature.
+
+## Repository Structure
+
+```
+pbmc3k-scrna-shap/
+├── README.md
+├── environment.yml
+├── data/                 # generated by notebooks; not committed (see .gitignore)
+├── notebooks/
+│   ├── 01_02_qc_clustering_annotation.ipynb
+│   └── 03_shap_interpretability.ipynb
+└── results/              # figures + CSV outputs, generated by notebooks
+```
+
+## Reproducing
+
+Run in Google Colab (recommended) or locally via conda:
+
+```bash
+conda env create -f environment.yml
+conda activate scrna
+jupyter lab
+# Run notebooks in order: 01_02 -> 03
+```
+
+## Key Visualizations
+
+- `results/umap_cell_types.png` — UMAP colored by annotated cell type
+- `results/dotplot_canonical_markers.png` — canonical marker gene expression per cluster
+- `results/shap_summary_all_classes.png` — global SHAP feature importance across all cell types
+- `results/shap_summary_<cell_type>.png` — per-cell-type SHAP summary plots
+- `results/shap_classifier_confusion_matrix.png` — classifier performance
+- `results/shap_vs_de_comparison.csv` — full gene-level comparison table
